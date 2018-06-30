@@ -1,7 +1,9 @@
 #%%
+import os.path
 import re
 import csv
 import time
+import datetime
 from selenium import webdriver
 from pyvirtualdisplay import Display
 
@@ -18,35 +20,51 @@ def get_text_excluding_children(driver, element):
         return ret;
         """, element) 
 
-def write_csv(player_id, last_active):
-    with open(player_id + '.csv', 'wb') as csvfile:
-        spamwriter = csv.writer(csvfile, delimiter=' ', quotechar=',', quoting=csv.QUOTE_MINIMAL)
-        pass
+def get_player(driver):
+    element = driver.find_element_by_xpath('/html/body/div[3]/table/tbody/tr[4]/td[2]/table[2]/tbody/tr/td/div/div')
+    player = get_text_excluding_children(driver, element)
+    return player
+
+def get_last_active(driver):
+    regex = re.compile(r'atividade: (\d*)h,')
+    element = driver.find_element_by_xpath('//*[@id="tribeinfo"]/table[1]/tbody/tr/td/div')
+    text = get_text_excluding_children(driver, element)
+    last_active = regex.search(text).group(1)
+    return last_active
+
+def write_csv(player, last_active):
+    filename = '../players/' + player + '.csv' 
+    if(os.path.isfile(filename)):
+        with open(filename, 'a', newline='\n') as csvfile:
+            #writer = csv.writer(csvfile, delimiter='', quotechar=',')
+            csvfile.write(datetime.datetime.now().strftime("%a %d-%m-%y %H:%M:%S") + ', ' + last_active + '\n')
+    else:
+        with open(filename, 'w', newline='\n') as csvfile:
+            #writer = csv.writer(csvfile, delimiter='', quotechar=',')
+            csvfile.write('time, time_since_last_active\n')
+            csvfile.write(datetime.datetime.now().strftime("%a %d-%m-%y %H:%M:%S") + ', ' + last_active + '\n')
 
 def main():
     display = Display(visible=0, size=(800, 600))
     display.start()
     player_id = '919440665'
-    text = None
-    last_active = None
-    regex = re.compile(r'atividade: (\d*)h,')
+    player, last_active = None, None
     with webdriver.Chrome() as driver:
         driver.get('http://br89.tribalwarsmap.com/br/history/player/' + player_id)
         t = time.time()
         timeout = 15
         while time.time() <= t+15:
             try:
-                element = driver.find_element_by_xpath('//*[@id="tribeinfo"]/table[1]/tbody/tr/td/div')
-                text = get_text_excluding_children(driver, element)
+                last_active = get_last_active(driver)
+                player = get_player(driver)
                 # text = element.text
                 break
             except Exception as e:
-                print(e)
+                #print(e)
                 print('Waiting for page to load')
                 time.sleep(1)
-        print(text)
-        last_active = regex.search(text).group(1)
-        print(last_active)
+
+        write_csv(player, last_active)
 
 if __name__ == '__main__':
     main()
