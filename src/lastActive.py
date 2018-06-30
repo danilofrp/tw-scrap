@@ -1,9 +1,8 @@
 #%%
-import os.path
-import re
-import csv
-import time
-import datetime
+from os.path import isfile
+from re import compile
+from time import time
+from datetime import datetime
 from selenium import webdriver
 from pyvirtualdisplay import Display
 
@@ -26,7 +25,7 @@ def get_player(driver):
     return player
 
 def get_last_active(driver):
-    regex = re.compile(r'atividade: (\d*)h,')
+    regex = compile(r'atividade: (\d*)h,')
     element = driver.find_element_by_xpath('//*[@id="tribeinfo"]/table[1]/tbody/tr/td/div')
     text = get_text_excluding_children(driver, element)
     last_active = regex.search(text).group(1)
@@ -34,15 +33,13 @@ def get_last_active(driver):
 
 def write_csv(player, last_active):
     filename = '../players/' + player + '.csv' 
-    if(os.path.isfile(filename)):
+    if(isfile(filename)):
         with open(filename, 'a', newline='\n') as csvfile:
-            #writer = csv.writer(csvfile, delimiter='', quotechar=',')
-            csvfile.write(datetime.datetime.now().strftime("%a %d-%m-%y %H:%M:%S") + ', ' + last_active + '\n')
+            csvfile.write(datetime.now().strftime("%a %d-%m-%y %H:%M:%S") + ', ' + last_active + '\n')
     else:
         with open(filename, 'w', newline='\n') as csvfile:
-            #writer = csv.writer(csvfile, delimiter='', quotechar=',')
             csvfile.write('time, time_since_last_active\n')
-            csvfile.write(datetime.datetime.now().strftime("%a %d-%m-%y %H:%M:%S") + ', ' + last_active + '\n')
+            csvfile.write(datetime.now().strftime("%a %d-%m-%y %H:%M:%S") + ', ' + last_active + '\n')
 
 def main():
     display = Display(visible=0, size=(800, 600))
@@ -51,13 +48,12 @@ def main():
     player, last_active = None, None
     with webdriver.Chrome() as driver:
         driver.get('http://br89.tribalwarsmap.com/br/history/player/' + player_id)
-        t = time.time()
+        t = time()
         timeout = 15
-        while time.time() <= t+15:
+        while time() <= t+15:
             try:
                 last_active = get_last_active(driver)
                 player = get_player(driver)
-                # text = element.text
                 break
             except Exception as e:
                 #print(e)
