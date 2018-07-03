@@ -1,4 +1,5 @@
-#%%
+#!/usr/bin/env python3
+
 from os.path import isfile
 from re import compile
 from time import time
@@ -32,7 +33,7 @@ def get_last_active(driver):
     return last_active
 
 def write_csv(player, last_active):
-    filename = '../players/' + player + '.csv' 
+    filename = '/home/danilofrp/workspace/tribal/tw-scrap/players/' + player + '.csv' 
     if(isfile(filename)):
         with open(filename, 'a', newline='\n') as csvfile:
             csvfile.write(datetime.now().strftime("%a %d-%m-%y %H:%M:%S") + ', ' + last_active + '\n')
@@ -57,7 +58,7 @@ def main():
                 break
             except Exception as e:
                 #print(e)
-                print('Waiting for page to load')
+                #print('Waiting for page to load')
                 time.sleep(1)
 
         write_csv(player, last_active)
